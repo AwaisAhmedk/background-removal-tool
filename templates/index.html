@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Background Remover</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1e272e, #0c0f14);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #container {
+            background: rgba(30, 39, 46, 0.9);
+            border: 2px solid #16c5ff;
+            border-radius: 15px;
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #16c5ff;
+            margin-bottom: 20px;
+        }
+
+        button, label {
+            background: linear-gradient(45deg, #1abc9c, #16a085);
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            border-radius: 25px;
+            color: #fff;
+            cursor: pointer;
+            border: none;
+            margin-top: 20px;
+            transition: transform 0.3s, background 0.3s;
+            display: inline-block;
+        }
+
+        button:hover, label:hover {
+            transform: translateY(-5px);
+            background: linear-gradient(45deg, #16a085, #1abc9c);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        #uploaded-image, #result-image {
+            margin-top: 20px;
+            max-width: 100%;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        #download-link {
+            margin-top: 20px;
+            text-decoration: none;
+            background: linear-gradient(45deg, #0984e3, #74b9ff);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            transition: transform 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            display: block;
+            margin: 20px auto;
+        }
+
+        #download-link:hover {
+            transform: translateY(-5px);
+        }
+
+        #spinner {
+            display: none;
+            margin-top: 20px;
+        }
+
+        #remove-button {
+            display: block;
+            margin-top: 20px;
+        }
+
+        #remove-another-button {
+            display: none;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>AI Background Remover</h1>
+
+        <!-- Upload Image Button -->
+        <label for="image-input" id="upload-label">Upload Image</label>
+        <input type="file" id="image-input" accept="image/*" />
+
+        <!-- Uploaded Image -->
+        <div id="uploaded-container" style="display: none;">
+            <h3>Uploaded Image:</h3>
+            <img id="uploaded-image" alt="Uploaded Image">
+        </div>
+
+        <!-- Processing Spinner -->
+        <div id="spinner" style="display: none;">
+            <div>Processing Image...</div>
+            <div>🔄</div>
+        </div>
+
+        <!-- Remove Background Button -->
+        <button id="remove-button" style="display: none;">Remove Background</button>
+
+        <!-- Result Image -->
+        <div id="result-container" style="display: none;">
+            <h3>Processed Image:</h3>
+            <img id="result-image" alt="Result Image">
+            <a id="download-link" href="" download>Download Image</a>
+        </div>
+
+        <!-- Remove Another Background Button -->
+        <button id="remove-another-button" style="display: none;">Remove Another Background</button>
+    </div>
+
+    <script>
+        const imageInput = document.getElementById('image-input');
+        const uploadLabel = document.getElementById('upload-label');
+        const uploadedContainer = document.getElementById('uploaded-container');
+        const uploadedImage = document.getElementById('uploaded-image');
+        const removeButton = document.getElementById('remove-button');
+        const spinner = document.getElementById('spinner');
+        const resultContainer = document.getElementById('result-container');
+        const resultImage = document.getElementById('result-image');
+        const downloadLink = document.getElementById('download-link');
+        const removeAnotherButton = document.getElementById('remove-another-button');
+
+        // When user uploads an image
+        imageInput.addEventListener('change', () => {
+            const file = imageInput.files[0];
+            if (file) {
+                uploadedImage.src = URL.createObjectURL(file);
+                uploadedContainer.style.display = 'block';
+                removeButton.style.display = 'block';
+                uploadLabel.style.display = 'none';  // Hide the upload button after image upload
+                processImage();  // Start processing after the image upload
+            }
+        });
+
+        // Dynamically handle the background removal process
+        async function processImage() {
+            spinner.style.display = 'block';  // Show spinner while processing
+            removeButton.style.display = 'none';  // Hide remove button during processing
+            uploadedContainer.style.display = 'none'; // Hide uploaded image while processing
+
+            const formData = new FormData();
+            formData.append('image', imageInput.files[0]);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    alert(data.error);
+                    spinner.style.display = 'none';
+                    return;
+                }
+
+                spinner.style.display = 'none';
+                resultImage.src = `/processed/${data.image_path}`;
+                resultContainer.style.display = 'block';  // Show result image
+
+                downloadLink.href = resultImage.src;  // Provide download link for the processed image
+                removeAnotherButton.style.display = 'block'; // Show "Remove Another Background" button
+            } catch (error) {
+                alert('Error removing background: ' + error.message);
+                spinner.style.display = 'none';
+            }
+        }
+
+        // Functionality for the "Remove Another Background" button
+        removeAnotherButton.addEventListener('click', () => {
+            uploadedImage.src = '';
+            uploadedContainer.style.display = 'none';
+            resultContainer.style.display = 'none';
+            imageInput.value = '';  // Reset the file input
+            removeButton.style.display = 'none';
+            uploadLabel.style.display = 'block';  // Show the upload button again
+            removeAnotherButton.style.display = 'none';  // Hide "Remove Another Background" button
+        });
+    </script>
+</body>
+</html>
