@@ -7,6 +7,7 @@ attrs==24.3.0
 bidict==0.23.1
 blinker==1.9.0
 certifi==2024.12.14
+chardet==5.2.0
 charset-normalizer==3.4.1
 click==8.1.8
 colorama==0.4.6
@@ -58,6 +59,7 @@ python-socketio==5.12.1
 pytz==2024.2
 referencing==0.36.2
 rembg==2.0.61
+reportlab==4.2.5
 requests==2.32.3
 rpds-py==0.22.3
 scikit-image==0.25.0
