@@ -1,9 +1,14 @@
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from rembg import remove
 from PIL import Image
+from werkzeug.exceptions import RequestEntityTooLarge
+
 import os
 import io
 import logging
+
+app = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5 MB limit
 
 # Set up logging for error details
 logging.basicConfig(level=logging.DEBUG)
@@ -12,6 +17,12 @@ app = Flask(__name__)
 
 UPLOAD_FOLDER = 'uploads'
 PROCESSED_FOLDER = 'processed'
+
+# Error handler for large file uploads
+@app.errorhandler(RequestEntityTooLarge)
+def handle_large_file(error):
+    return jsonify({"error": "File size exceeds the maximum allowed limit of 5 MB"}), 413
+
 
 # Make sure the folders exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
